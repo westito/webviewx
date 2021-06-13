@@ -9,7 +9,7 @@ import 'package:webviewx/src/utils/view_content_model.dart';
 import 'package:webviewx/src/utils/web_history.dart';
 
 /// Web implementation
-class WebViewXController extends ValueNotifier<ViewContentModel> {
+class WebWebViewXController extends ValueNotifier<ViewContentModel> {
   /// JsObject connector
   late js.JsObject connector;
 
@@ -23,11 +23,11 @@ class WebViewXController extends ValueNotifier<ViewContentModel> {
   bool printDebugInfo = false;
 
   /// Constructor
-  WebViewXController({
+  WebWebViewXController({
     required String initialContent,
     required SourceType initialSourceType,
     required bool ignoreAllGestures,
-  })   : ignoreAllGesturesNotifier = ValueNotifier(ignoreAllGestures),
+  })  : ignoreAllGesturesNotifier = ValueNotifier(ignoreAllGestures),
         _history = HistoryStack(
           initialEntry: HistoryEntry(
             source: initialContent,

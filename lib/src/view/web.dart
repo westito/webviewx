@@ -41,7 +41,7 @@ class WebViewXWidget extends StatefulWidget {
 
   /// Callback which returns a referrence to the [WebViewXController]
   /// being created.
-  final Function(WebViewXController controller)? onWebViewCreated;
+  final Function(WebWebViewXController controller)? onWebViewCreated;
 
   /// A set of [EmbeddedJsContent].
   ///
@@ -122,7 +122,7 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
   late StreamSubscription iframeOnLoadSubscription;
   late js.JsObject jsWindowObject;
 
-  late WebViewXController webViewXController;
+  late WebWebViewXController webViewXController;
 
   // Pseudo state used to find out if the current iframe
   // has started or finished loading.
@@ -178,8 +178,8 @@ class _WebViewXWidgetState extends State<WebViewXWidget> {
     _printIfDebug('The XFrameBypass custom iframe element has loaded');
   }
 
-  WebViewXController _createWebViewXController() {
-    return WebViewXController(
+  WebWebViewXController _createWebViewXController() {
+    return WebWebViewXController(
       initialContent: widget.initialContent,
       initialSourceType: widget.initialSourceType,
       ignoreAllGestures: _ignoreAllGestures,

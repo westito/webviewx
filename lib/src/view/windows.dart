@@ -1,50 +1,93 @@
-import 'package:flutter/widgets.dart';
-import 'package:webview_windows/webview_windows.dart';
-import 'package:webviewx/src/controller/windows.dart';
+part of 'device.dart';
 
-import 'device.dart';
+class _WindowsWebViewXWidgetState extends State<WebViewXWidget> {
+  late WebviewController originalWebViewController;
+  late WindowsWebViewXController webViewXController;
 
-class WindowsWebViewXWidgetState extends State<WebViewXWidget> {
-  late WebviewController _controller;
-  late WindowsWebViewXController _windowsWebViewXController;
+  late bool _ignoreAllGestures;
 
   @override
   void initState() {
     super.initState();
 
-    initPlatformState();
+    _ignoreAllGestures = widget.ignoreAllGestures;
+    webViewXController = _createWindowsWebViewXController();
   }
 
-  Future<void> initPlatformState() async {
-    _controller = WebviewController();
+  Future<WebviewController> initPlatformState() async {
+    await originalWebViewController.initialize();
 
-    await _controller.initialize();
-
-    _windowsWebViewXController = WindowsWebViewXController(
-      _controller,
-      initialContent: widget.initialContent,
-      initialSourceType: widget.initialSourceType,
-      ignoreAllGestures: widget.ignoreAllGestures,
-    );
+    originalWebViewController = WebviewController();
+    webViewXController.connector = originalWebViewController;
 
     if (widget.onWebViewCreated != null) {
-      widget.onWebViewCreated!(_windowsWebViewXController);
+      widget.onWebViewCreated!(webViewXController);
     }
 
-    await _controller.loadUrl('https://flutter.dev');
+    return originalWebViewController;
 
-    if (!mounted) return;
+    //if (!mounted) return;
 
-    setState(() {});
+    //setState(() {});
+  }
+
+  WindowsWebViewXController _createWindowsWebViewXController() {
+    return WindowsWebViewXController(
+      initialContent: widget.initialContent,
+      initialSourceType: widget.initialSourceType,
+      ignoreAllGestures: _ignoreAllGestures,
+    )
+      ..addListener(_handleChange)
+      ..ignoreAllGesturesNotifier.addListener(
+        _handleIgnoreGesturesChange,
+      );
+  }
+
+  // Called when WebViewXController updates it's value
+  Future<void> _handleChange() async {
+    final newContentModel = webViewXController.value;
+
+    if (newContentModel.sourceType == SourceType.HTML) {
+      await originalWebViewController
+          .loadStringContent(_prepareContent(newContentModel));
+    } else {
+      await originalWebViewController.loadUrl(newContentModel.content);
+    }
+  }
+
+  // Called when the ValueNotifier inside WebViewXController updates it's value
+  void _handleIgnoreGesturesChange() {
+    setState(() {
+      _ignoreAllGestures = webViewXController.ignoringAllGestures;
+    });
+  }
+
+  // Prepares the source depending if it is HTML or URL
+  String _prepareContent(ViewContentModel model) {
+    return HtmlUtils.preprocessSource(
+      model.content,
+      jsContent: widget.jsContent,
+
+      // Needed for mobile webview in order to URI-encode the HTML
+      encodeHtml: true,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     Widget webview = SizedBox(
-      width: widget.width,
-      height: widget.height,
-      child: Webview(_controller)
-    );
+        width: widget.width,
+        height: widget.height,
+        child: FutureBuilder<WebviewController>(
+          future: initPlatformState(),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              return Webview(snapshot.data!);
+            } else {
+              return Container();
+            }
+          },
+        ));
 
     return IgnorePointer(
       ignoring: widget.ignoreAllGestures,

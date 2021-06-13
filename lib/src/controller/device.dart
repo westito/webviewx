@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:webviewx/src/utils/source_type.dart';
-import 'package:webviewx/src/utils/view_content_model.dart';
-import 'package:webviewx/src/utils/web_history.dart';
-import 'package:webviewx/src/utils/webview_content_model.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webviewx/src/utils/html_utils.dart';
 
-/// Facade controller
-///
-/// Throws UnimplementedError if used.
-class WebViewXController extends ValueNotifier<ViewContentModel> {
+import 'dart:async' show Future, FutureOr;
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:webviewx/src/utils/source_type.dart';
+import 'package:webviewx/src/utils/utils.dart';
+import 'package:webviewx/src/utils/view_content_model.dart';
+
+/// Mobile implementation
+abstract class DeviceWebViewXController
+    extends ValueNotifier<ViewContentModel> {
   /// Boolean value notifier used to toggle ignoring gestures on the webview
   ValueNotifier<bool> ignoreAllGesturesNotifier;
 
   /// Constructor
-  WebViewXController({
+  DeviceWebViewXController({
     required String initialContent,
     required SourceType initialSourceType,
     required bool ignoreAllGestures,
@@ -24,16 +27,21 @@ class WebViewXController extends ValueNotifier<ViewContentModel> {
           ),
         );
 
+  void _setContent(ViewContentModel model) {
+    value = model;
+  }
+
   /// Returns true if the webview's current content is HTML
-  bool get isCurrentContentHTML => throw UnimplementedError();
+  bool get isCurrentContentHTML => value.sourceType == SourceType.HTML;
 
   /// Returns true if the webview's current content is URL
-  bool get isCurrentContentURL => throw UnimplementedError();
+  bool get isCurrentContentURL => value.sourceType == SourceType.URL;
 
   /// Returns true if the webview's current content is URL, and if
   /// [SourceType] is [SourceType.URL_BYPASS], which means it should
   /// use the bypass to fetch the web page content.
-  bool get isCurrentContentURLBypass => throw UnimplementedError();
+  bool get isCurrentContentURLBypass =>
+      value.sourceType == SourceType.URL_BYPASS;
 
   /// Set webview content to the specified URL.
   /// Example URL: https://flutter.dev
@@ -46,14 +54,30 @@ class WebViewXController extends ValueNotifier<ViewContentModel> {
     SourceType sourceType, {
     Map<String, String> headers = const {},
     bool fromAssets = false,
-  }) async =>
-      throw UnimplementedError();
+  }) async {
+    if (fromAssets) {
+      var _content = await rootBundle.loadString(content);
+      _setContent(ViewContentModel(
+        content: _content,
+        headers: headers,
+        sourceType: sourceType,
+      ));
+    } else {
+      _setContent(ViewContentModel(
+        content: content,
+        headers: headers,
+        sourceType: sourceType,
+      ));
+    }
+  }
 
   /// Boolean getter which reveals if the gestures are ignored right now
-  bool get ignoringAllGestures => throw UnimplementedError();
+  bool get ignoringAllGestures => ignoreAllGesturesNotifier.value;
 
   /// Function to set ignoring gestures
-  void setIgnoreAllGestures(bool value) => throw UnimplementedError();
+  void setIgnoreAllGestures(bool value) {
+    ignoreAllGesturesNotifier.value = value;
+  }
 
   /// This function allows you to call Javascript functions defined inside the webview.
   ///
@@ -70,11 +94,11 @@ class WebViewXController extends ValueNotifier<ViewContentModel> {
   /// var resultFromJs = await callJsMethod('someFunction', ['test'])
   /// print(resultFromJs); // prints "This is a test"
   /// ```
+  //TODO This should return an error if the operation failed, but it doesn't
   Future<dynamic> callJsMethod(
     String name,
     List<dynamic> params,
-  ) =>
-      throw UnimplementedError();
+  );
 
   /// This function allows you to evaluate 'raw' javascript (e.g: 2+2)
   /// If you need to call a function you should use the method above ([callJsMethod])
@@ -85,45 +109,33 @@ class WebViewXController extends ValueNotifier<ViewContentModel> {
   /// For more info, check Mozilla documentation on 'window'
   Future<dynamic> evalRawJavascript(
     String rawJavascript, {
-    bool inGlobalContext = false,
-  }) =>
-      throw UnimplementedError();
-
-  /// WEB-ONLY. YOU SHOULDN'T NEED TO CALL THIS FROM YOUR CODE.
-  ///
-  /// This is called internally by the web.dart view class, to add a new
-  /// iframe navigation history entry.
-  ///
-  /// This, and all history-related stuff is needed because the history on web
-  /// is basically reimplemented by me from scratch using the [HistoryEntry] class.
-  /// This had to be done because I couldn't intercept iframe's navigation events and
-  /// current url.
-  // void webAddHistory(HistoryEntry entry) => throw UnimplementedError();
+    bool inGlobalContext = false, // NO-OP HERE
+  });
 
   /// Returns the current content
-  Future<WebViewContent> getContent() => throw UnimplementedError();
+  Future<WebViewContent> getContent();
 
   /// Returns a Future that completes with the value true, if you can go
   /// back in the history stack.
-  Future<bool> canGoBack() => throw UnimplementedError();
+  Future<bool> canGoBack();
 
   /// Go back in the history stack.
-  Future<void> goBack() => throw UnimplementedError();
+  Future<void> goBack();
 
   /// Returns a Future that completes with the value true, if you can go
   /// forward in the history stack.
-  Future<bool> canGoForward() => throw UnimplementedError();
+  Future<bool> canGoForward();
 
   /// Go forward in the history stack.
-  Future<void> goForward() => throw UnimplementedError();
+  Future<void> goForward();
 
   /// Reload the current content.
-  Future<void> reload() => throw UnimplementedError();
+  Future<void> reload();
 
   /// Dispose resources
   @override
   void dispose() {
+    ignoreAllGesturesNotifier.dispose();
     super.dispose();
-    throw UnimplementedError();
   }
 }

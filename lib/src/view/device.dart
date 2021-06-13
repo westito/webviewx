@@ -1,15 +1,20 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:webview_windows/webview_windows.dart';
+import 'package:webviewx/src/controller/device.dart';
+import 'package:webviewx/src/controller/mobile.dart';
+import 'package:webviewx/src/controller/windows.dart';
 import 'package:webviewx/src/utils/utils.dart';
 import 'package:webviewx/src/utils/view_content_model.dart';
 import 'package:webviewx/src/controller/controller.dart';
 import 'dart:io';
 
-import 'package:webviewx/src/view/mobile.dart';
 import 'package:webview_flutter/platform_interface.dart' as wf_pi;
 import 'package:webview_flutter/webview_flutter.dart' as wf;
 
-import 'windows.dart';
+part 'mobile.dart';
+
+part 'windows.dart';
 
 /// Mobile implementation
 class WebViewXWidget extends StatefulWidget {
@@ -35,7 +40,7 @@ class WebViewXWidget extends StatefulWidget {
 
   /// Callback which returns a referrence to the [WebViewXController]
   /// being created.
-  final Function(WebViewXController controller)? onWebViewCreated;
+  final Function(DeviceWebViewXController controller)? onWebViewCreated;
 
   /// A set of [EmbeddedJsContent].
   ///
@@ -109,9 +114,9 @@ class WebViewXWidget extends StatefulWidget {
   @override
   State createState() {
     if (Platform.isAndroid || Platform.isIOS) {
-      return MobileWebViewXWidgetState();
+      return _MobileWebViewXWidgetState();
     } else if (Platform.isWindows) {
-      return WindowsWebViewXWidgetState();
+      return _WindowsWebViewXWidgetState();
     } else {
       throw UnimplementedError(
           'Platform ${Platform.operatingSystem} not supported');

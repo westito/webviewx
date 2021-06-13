@@ -1,14 +1,8 @@
-import 'package:flutter/widgets.dart';
-import 'package:webview_flutter/platform_interface.dart' as wf_pi;
-import 'package:webview_flutter/webview_flutter.dart' as wf;
-import 'package:webviewx/src/utils/view_content_model.dart';
-import 'package:webviewx/src/view/device.dart';
+part of 'device.dart';
 
-import '../../webviewx.dart';
-
-class MobileWebViewXWidgetState extends State<WebViewXWidget> {
+class _MobileWebViewXWidgetState extends State<WebViewXWidget> {
   late wf.WebViewController originalWebViewController;
-  late WebViewXController webViewXController;
+  late MobileWebViewXController webViewXController;
 
   late bool _ignoreAllGestures;
 
@@ -22,7 +16,7 @@ class MobileWebViewXWidgetState extends State<WebViewXWidget> {
 
   @override
   Widget build(BuildContext context) {
-     final javascriptMode = wf.JavascriptMode.values.singleWhere(
+    final javascriptMode = wf.JavascriptMode.values.singleWhere(
       (value) => value.toString() == widget.javascriptMode.toString(),
     );
     final initialMediaPlaybackPolicy =
@@ -54,7 +48,8 @@ class MobileWebViewXWidgetState extends State<WebViewXWidget> {
       );
     };
     final onWebViewCreated = (wf.WebViewController webViewController) {
-      webViewXController.connector = webViewController;
+      originalWebViewController = webViewController;
+      webViewXController.connector = originalWebViewController;
       // Calls onWebViewCreated to pass the refference upstream
       if (widget.onWebViewCreated != null) {
         widget.onWebViewCreated!(webViewXController);
@@ -111,8 +106,8 @@ class MobileWebViewXWidgetState extends State<WebViewXWidget> {
   }
 
   // Creates a WebViewXController and adds the listener
-  WebViewXController _createWebViewXController() {
-    return WebViewXController(
+  MobileWebViewXController _createWebViewXController() {
+    return MobileWebViewXController(
       initialContent: widget.initialContent,
       initialSourceType: widget.initialSourceType,
       ignoreAllGestures: _ignoreAllGestures,
